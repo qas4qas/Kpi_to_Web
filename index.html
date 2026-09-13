@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>اللوحة (المختصرة) لمؤشرات الأداء الاستراتيجي</title>
+<title>لوحة حالة الأداء (المختصرة) لمؤشرات الأداء الاستراتيجي</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root{
@@ -215,11 +215,11 @@
 
 <header>
   <div class="eyebrow">وزارة التعليم — الإدارة العامة للتعليم بمنطقة جدة</div>
-  <h1>اللوحة(المختصرة) لمؤشرات الأداء الاستراتيجي</h1>
+  <h1>لوحــة حالة الأداء (المختصرة) لمؤشرات الأداء الاستراتيجي</h1>
   <p class="sub">مرجع تحليلي مختصر لعرض قيم كل مؤشر في كامل الفترات وحالة الإنجاز، قابل للفرز والفلترة والتحديث والتصدير.</p>
   <div class="dashboard-note">
     <span>📊 <b>ملاحظة:</b> التحليل العميق للمؤشرات والرسومات التوضيحية موجود من خلال رابط الداشبورد التفاعلي —</span>
-    <a href="https://app.powerbi.com/reportEmbed?reportId=69cc9a91-0581-4b2c-b4be-f5477ba2d6cc&autoAuth=true&ctid=6bca8351-01d3-4252-85ea-bda8f8d235bd" id="dashboardUrl" target="_blank" rel="noopener" onclick="event.stopPropagation();">فتح الداشبورد التفاعلي</a>
+    <a href="https://app.powerbi.com/reportEmbed?reportId=69cc9a91-0581-4b2c-b4be-f5477ba2d6cc&autoAuth=true&ctid=6bca8351-01d3-4252-85ea-bda8f8d235bd" id="dashboardLink" target="_blank" rel="noopener">فتح الداشبورد التفاعلي</a>
   </div>
 </header>
 
@@ -321,9 +321,6 @@
    ============================================================ */
 const CSV_FILE = "kpi_master_data.csv";
 const PERIODS = ["Q4-2024","Q1-2025","Q2-2025","Q3-2025","Q4-2025"];
-
-// عدّل هذا الرابط ليشير إلى الداشبورد التفاعلي الفعلي (Power BI)
-document.getElementById("dashboardLink").href = "#";
 
 let KPI_DATA = [];
 
