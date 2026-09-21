@@ -74,6 +74,12 @@
     border-bottom:1px dashed rgba(13,207,218,.6);
   }
   .dashboard-note a:hover{color:#fff; border-color:#fff;}
+  .last-updated{
+    position:relative; z-index:1;
+    display:inline-flex; align-items:center; gap:6px;
+    margin-top:10px; font-size:12px; color:#cfc7e6;
+  }
+  .last-updated b{color:#fff; font-weight:700;}
 
   /* ===== Summary cards ===== */
   .summary{
@@ -219,8 +225,9 @@
   <p class="sub">مرجع تحليلي مختصر لعرض قيم كل مؤشر في كامل الفترات وحالة الإنجاز، قابل للفرز والفلترة والتحديث والتصدير.</p>
   <div class="dashboard-note">
     <span>📊 <b>ملاحظة:</b> التحليل العميق للمؤشرات والرسومات التوضيحية موجود من خلال رابط الداشبورد التفاعلي —</span>
-    <a href="#" id="dashboardLink" target="_blank" rel="noopener">فتح الداشبورد التفاعلي</a>
+    <a href="https://app.powerbi.com/reportEmbed?reportId=69cc9a91-0581-4b2c-b4be-f5477ba2d6cc&autoAuth=true&ctid=6bca8351-01d3-4252-85ea-bda8f8d235bd" id="dashboardLink" target="_blank" rel="noopener">فتح الداشبورد التفاعلي</a>
   </div>
+  <div class="last-updated" id="lastUpdated"></div>
 </header>
 
 <div class="summary" id="summaryCards" style="display:none;"></div>
@@ -276,13 +283,13 @@
 <div id="loadState" class="loading">⏳ يتم تحميل بيانات المؤشرات من ملف kpi_master_data.csv ...</div>
 
 <div class="table-wrap" id="tableWrap" style="display:none;">
-  <div id="printTitle">لوحة حالة الأداء (المختصرة) لمؤشرات الأداء الاستراتيجي — نسخة مصدَّرة</div>
+  <div id="printTitle">لوحة حالة الأداء (المختصرة) لمؤشرات الأداء الاستراتيجي — نسخة مصدَّرة (بيانات بتاريخ <span id="printTitleDate"></span>)</div>
   <div class="scroll-x">
     <table id="kpiTable">
       <thead>
         <tr class="group-row">
           <th colspan="3"></th>
-          <th colspan="5">الفترات (من الأقدم إلى الأحدث)</th>
+          <th colspan="6">الفترات (من الأقدم إلى الأحدث)</th>
           <th colspan="3">جدة</th>
           <th colspan="3">وطني</th>
         </tr>
@@ -290,11 +297,12 @@
           <th data-key="name" class="name-col">المؤشر</th>
           <th data-key="department" class="dept-col">القسم</th>
           <th data-key="activated">الحالة</th>
-          <th data-key="pQ4_24">Q4-2024</th>
-          <th data-key="pQ1_25">Q1-2025</th>
-          <th data-key="pQ2_25">Q2-2025</th>
-          <th data-key="pQ3_25">Q3-2025</th>
-          <th data-key="pQ4_25">Q4-2025</th>
+          <th data-key="pQ4_24" data-period="Q4-2024">Q4-2024</th>
+          <th data-key="pQ1_25" data-period="Q1-2025">Q1-2025</th>
+          <th data-key="pQ2_25" data-period="Q2-2025">Q2-2025</th>
+          <th data-key="pQ3_25" data-period="Q3-2025">Q3-2025</th>
+          <th data-key="pQ4_25" data-period="Q4-2025">Q4-2025</th>
+          <th data-key="pQ1_26" data-period="Q1-2026">Q1-2026</th>
           <th data-key="target_jeddah" class="sep-col">مستهدف جدة</th>
           <th data-key="achievement_jeddah">إنجاز مستهدف جدة</th>
           <th data-key="status_jeddah">الحالة — جدة</th>
@@ -320,10 +328,12 @@
    القيم الجديدة — الصفحة لا تحتاج أي تعديل برمجي.
    ============================================================ */
 const CSV_FILE = "kpi_master_data.csv";
-const PERIODS = ["Q4-2024","Q1-2025","Q2-2025","Q3-2025","Q4-2025"];
+const PERIODS = ["Q4-2024","Q1-2025","Q2-2025","Q3-2025","Q4-2025","Q1-2026"];
 
-// عدّل هذا الرابط ليشير إلى الداشبورد التفاعلي الفعلي (Power BI)
-document.getElementById("dashboardLink").href = "#";
+// تاريخ آخر تحديث للبيانات — نص واحد يُعدَّل هنا فقط عند كل تحديث مستقبلي
+const LAST_UPDATED = "20-سبتمبر-2026";
+document.getElementById("lastUpdated").innerHTML = `🕓 آخر تحديث للبيانات: <b>${LAST_UPDATED}</b>`;
+document.getElementById("printTitleDate").textContent = LAST_UPDATED;
 
 let KPI_DATA = [];
 
@@ -550,18 +560,10 @@ document.querySelectorAll("thead tr:last-child th").forEach(th=>{
   th.addEventListener("click", ()=>{
     const key = th.dataset.key;
     if(!key) return;
+    const period = th.dataset.period; // إن وُجدت الفترة على العمود، لا حاجة لأي تعديل كود عند إضافة فترات جديدة مستقبلًا
     sortState.dir = (sortState.key === key) ? -sortState.dir : 1;
     sortState.key = key;
-    const getVal = (d)=>{
-      switch(key){
-        case "pQ4_24": return d.periods["Q4-2024"];
-        case "pQ1_25": return d.periods["Q1-2025"];
-        case "pQ2_25": return d.periods["Q2-2025"];
-        case "pQ3_25": return d.periods["Q3-2025"];
-        case "pQ4_25": return d.periods["Q4-2025"];
-        default: return d[key];
-      }
-    };
+    const getVal = (d)=> period ? d.periods[period] : d[key];
     let filtered = getFilteredData();
     filtered.sort((a,b)=>{
       let va = getVal(a), vb = getVal(b);
@@ -590,18 +592,14 @@ document.getElementById("resetBtn").addEventListener("click", ()=>{
 /* ===== تصدير Excel للبيانات المفلترة الحالية ===== */
 document.getElementById("exportExcelBtn").addEventListener("click", ()=>{
   const headers = ["المؤشر","القسم","الحالة",
-    "Q4-2024","Q1-2025","Q2-2025","Q3-2025","Q4-2025",
+    ...PERIODS,
     "مستهدف جدة","إنجاز مستهدف جدة","الحالة - جدة",
     "مستهدف وطني","إنجاز مستهدف وطني","الحالة - وطني"];
   const rows = currentFiltered.map(d=>[
     d.name,
     d.department && d.department.trim() !== "" ? d.department : "غير محدد",
     d.activated ? "مفعّل" : "غير مفعّل",
-    fmtVal(d.periods["Q4-2024"], d.vtype) ?? "—",
-    fmtVal(d.periods["Q1-2025"], d.vtype) ?? "—",
-    fmtVal(d.periods["Q2-2025"], d.vtype) ?? "—",
-    fmtVal(d.periods["Q3-2025"], d.vtype) ?? "—",
-    fmtVal(d.periods["Q4-2025"], d.vtype) ?? "—",
+    ...PERIODS.map(p => fmtVal(d.periods[p], d.vtype) ?? "—"),
     (d.target_jeddah !== null && d.target_jeddah !== undefined) ? fmtVal(d.target_jeddah, d.vtype) : "—",
     fmtPct(d.achievement_jeddah) ?? "—",
     d.status_jeddah ?? "—",
