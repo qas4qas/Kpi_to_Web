@@ -204,6 +204,7 @@
   }
 
   /* ===== Print (PDF export) ===== */
+  .print-only{ display:none; }
   @media print{
     header, .filters, .toolbar, .summary, footer{display:none !important;}
     body{background:#fff;}
@@ -213,6 +214,9 @@
     thead th{background:#382972 !important; color:#fff !important; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
     td.cell-max{background:#13A09F !important; color:#fff !important; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
     td.cell-min{background:#B03A2E !important; color:#fff !important; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
+    /* عرض جدول الطباعة المختصر (8 أعمدة) فقط، وإخفاء الجدول الكامل بكل أعمدته */
+    #kpiTable{ display:none !important; }
+    .print-only{ display:table !important; width:100%; }
   }
   #printTitle{display:none;}
 </style>
@@ -314,6 +318,23 @@
       <tbody id="tableBody"></tbody>
     </table>
   </div>
+
+  <!-- جدول مخصّص للطباعة/PDF فقط: 8 أعمدة مختصرة لتناسب عرض A4 — لا يظهر على الشاشة إطلاقًا -->
+  <table id="printOnlyTable" class="print-only">
+    <thead>
+      <tr>
+        <th>المؤشر</th>
+        <th>القسم</th>
+        <th>الحالة</th>
+        <th>آخر قيمة</th>
+        <th>مستهدف جدة</th>
+        <th>إنجاز جدة</th>
+        <th>مستهدف وطني</th>
+        <th>إنجاز وطني</th>
+      </tr>
+    </thead>
+    <tbody id="printOnlyTableBody"></tbody>
+  </table>
 </div>
 
 <footer>
@@ -409,6 +430,7 @@ function csvToKpiData(rows){
       activated: (r[iActive] || "").trim() === "مفعل",
       vtype,
       periods,
+      last_actual: lastActual,
       target_jeddah: targetJeddah,
       achievement_jeddah: jed.ach,
       status_jeddah: jed.status,
@@ -616,7 +638,31 @@ document.getElementById("exportExcelBtn").addEventListener("click", ()=>{
 });
 
 /* ===== تصدير PDF عبر نافذة الطباعة (لضمان ظهور النص العربي بشكل صحيح) ===== */
+/* يعرض فقط 8 أعمدة مختصرة تناسب عرض A4: المؤشر - القسم - الحالة - آخر قيمة -
+   مستهدف جدة - إنجاز جدة - مستهدف وطني - إنجاز وطني (دون التأثير على الجدول الأصلي) */
+function buildPrintOnlyRows(){
+  document.getElementById("printOnlyTableBody").innerHTML = currentFiltered.map(d=>{
+    const lastVal = fmtVal(d.last_actual, d.vtype) ?? "—";
+    const targetJed = (d.target_jeddah !== null && d.target_jeddah !== undefined) ? fmtVal(d.target_jeddah, d.vtype) : "—";
+    const achJed = fmtPct(d.achievement_jeddah) ?? "—";
+    const targetNat = (d.target_national !== null && d.target_national !== undefined) ? fmtVal(d.target_national, d.vtype) : "—";
+    const achNat = fmtPct(d.achievement_national) ?? "—";
+    const deptDisplay = d.department && d.department.trim() !== "" ? d.department : "—";
+    return `<tr>
+        <td class="name-col">${d.name}</td>
+        <td>${deptDisplay}</td>
+        <td>${d.activated ? "مفعّل" : "غير مفعّل"}</td>
+        <td>${lastVal}</td>
+        <td>${targetJed}</td>
+        <td>${achJed}</td>
+        <td>${targetNat}</td>
+        <td>${achNat}</td>
+      </tr>`;
+  }).join("");
+}
+
 document.getElementById("exportPdfBtn").addEventListener("click", ()=>{
+  buildPrintOnlyRows();
   window.print();
 });
 
